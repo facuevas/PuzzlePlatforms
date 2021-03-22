@@ -2,7 +2,6 @@
 
 
 #include "MovingPlatform.h"
-
 #include "Engine/EngineTypes.h"
 
 AMovingPlatform::AMovingPlatform()
@@ -23,6 +22,9 @@ void AMovingPlatform::BeginPlay()
 		SetReplicates(true); // sets the actor replication
 		SetReplicateMovement(true); // sets the actor movement replication
 	}
+
+	GlobalStartLocation = GetActorLocation();
+	GlobalTargetLocation = GetTransform().TransformPosition(TargetLocation); // change TargetLocation from relative to global coordinates
 }
 
 void AMovingPlatform::Tick(float DeltaSeconds)
@@ -36,9 +38,34 @@ void AMovingPlatform::Tick(float DeltaSeconds)
 	// and see no changes with the box.
 	if (HasAuthority())
 	{
-		FVector Location = GetActorLocation();
-		Location += FVector(Speed * DeltaSeconds, 0.f, 0.f);
-		SetActorLocation(Location);
+		PlatformCycle(DeltaSeconds);
 	}
 	
+}
+
+/*
+ * Moves the platform back to the target location
+ * back to where it was originally placed.
+ * Must be used in Tick() due to Delta Time usage
+ */
+void AMovingPlatform::PlatformCycle(float DeltaSeconds)
+{
+	FVector Location = GetActorLocation(); // Get the current location of the platform
+	const float Distance = FVector::Dist(GlobalTargetLocation, GlobalStartLocation); // Get the total distance from start to target
+	const float CurrentDistance = FVector::Dist(Location, GlobalStartLocation); // Get the current distance from the current location to target
+
+	// If the CurrentDistance is greater than the Distance,
+	// Our platform is there.
+	// Swap the values to cycle back
+	if (CurrentDistance >= Distance)
+	{
+		FVector Temp = GlobalStartLocation;
+		GlobalStartLocation = GlobalTargetLocation;
+		GlobalTargetLocation = Temp;
+	}
+
+	// Calculate Direction Vector and move the Platform
+	FVector Direction = (GlobalTargetLocation - GlobalStartLocation).GetSafeNormal();
+	Location += Speed * DeltaSeconds * Direction;
+	SetActorLocation(Location);
 }

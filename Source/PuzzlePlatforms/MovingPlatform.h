@@ -26,6 +26,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Properties")
 	float Speed;
 
+	UPROPERTY(EditAnywhere, Category = "Properties", Meta = (MakeEditWidget = true))
+	FVector TargetLocation;
+	
+	void PlatformCycle(float DeltaSeconds);
+
+private:
+
+	FVector GlobalTargetLocation;
+
+	FVector GlobalStartLocation;
+
 private:
 	
 };
