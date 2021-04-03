@@ -11,6 +11,21 @@ AMovingPlatform::AMovingPlatform()
 
 	// Speed of moving platform.
 	Speed = 20.f;
+
+	ActiveTriggers = 1;
+}
+
+void AMovingPlatform::AddActiveTrigger()
+{
+	ActiveTriggers++;
+}
+
+void AMovingPlatform::RemoveActiveTrigger()
+{
+	if (ActiveTriggers > 0)
+	{
+		ActiveTriggers--;
+	}
 }
 
 void AMovingPlatform::BeginPlay()
@@ -24,7 +39,8 @@ void AMovingPlatform::BeginPlay()
 	}
 
 	GlobalStartLocation = GetActorLocation();
-	GlobalTargetLocation = GetTransform().TransformPosition(TargetLocation); // change TargetLocation from relative to global coordinates
+	GlobalTargetLocation = GetTransform().TransformPosition(TargetLocation);
+	// change TargetLocation from relative to global coordinates
 }
 
 void AMovingPlatform::Tick(float DeltaSeconds)
@@ -36,11 +52,13 @@ void AMovingPlatform::Tick(float DeltaSeconds)
 	// and the box moves
 	// else they are a client
 	// and see no changes with the box.
-	if (HasAuthority())
+	if (ActiveTriggers > 0)
 	{
-		PlatformCycle(DeltaSeconds);
+		if (HasAuthority())
+		{
+			PlatformCycle(DeltaSeconds);
+		}
 	}
-	
 }
 
 /*
@@ -51,8 +69,10 @@ void AMovingPlatform::Tick(float DeltaSeconds)
 void AMovingPlatform::PlatformCycle(float DeltaSeconds)
 {
 	FVector Location = GetActorLocation(); // Get the current location of the platform
-	const float Distance = FVector::Dist(GlobalTargetLocation, GlobalStartLocation); // Get the total distance from start to target
-	const float CurrentDistance = FVector::Dist(Location, GlobalStartLocation); // Get the current distance from the current location to target
+	const float Distance = FVector::Dist(GlobalTargetLocation, GlobalStartLocation);
+	// Get the total distance from start to target
+	const float CurrentDistance = FVector::Dist(Location, GlobalStartLocation);
+	// Get the current distance from the current location to target
 
 	// If the CurrentDistance is greater than the Distance,
 	// Our platform is there.
